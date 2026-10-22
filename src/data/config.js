@@ -8,7 +8,7 @@ export const SITE_CONFIG = {
   primaryPhone: "9837084883",
   secondaryPhone: "8384812979",
   whatsappNumber: "9837084883",
-  email: "bookings@mileupcabs.com",
+  email: "mileupcabs@zohomail.in",
   
   address: "Ramnagar Road / Station Road, Kashipur, Udham Singh Nagar, Uttarakhand - 244713",
   servingArea: "Delhi NCR, Delhi IGI Airport, Pantnagar, Dehradun, Char Dham, Kashipur & All India",

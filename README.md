@@ -41,11 +41,14 @@ npm run build
 ## ✏️ How to Update Business Details (Easy 1-File Setup)
 
 Open [`src/data/config.js`](./src/data/config.js) to change:
-- `primaryPhone`: Currently `9837084883`
-- `secondaryPhone`: Currently `8384812979`
-- `whatsappNumber`: Currently `9837084883`
-- `email`: Currently placeholder `bookings@kashipurcabs.com`
-- `name`: Currently `Kashipur Cab Service`
+- `name`: `MileUp Cabs`
+- `primaryPhone`: `9837084883`
+- `secondaryPhone`: `8384812979`
+- `whatsappNumber`: `9837084883`
+- `email`: `mileupcabs@zohomail.in`
+- `address`: Office & base location
+
+Whenever you edit [`src/data/config.js`](./src/data/config.js), it automatically updates across the entire website (Navbar, Footer, Booking forms, Call desk, Schema).
 
 ---
 
