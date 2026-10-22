@@ -1,0 +1,5 @@
+# MileUp Cabs - Premier Chauffeur-Driven Transport
+User-agent: *
+Allow: /
+
+Sitemap: https://mileup.in/sitemap.xml
