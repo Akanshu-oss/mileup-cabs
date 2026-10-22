@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mileup.in/sitemap.xml
+Sitemap: https://mileup-cab.vercel.app/sitemap.xml
