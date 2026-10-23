@@ -7,17 +7,23 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          accent: '#f59e0b', // warm gold/amber for trust & travel
-          whatsapp: '#25D366',
+        ivory: '#FAF9F6',
+        charcoal: '#17191D',
+        gold: {
+          DEFAULT: '#D99A20',
+          hover: '#C08518',
+          light: '#FDF8F0',
+          border: '#EAD7B0',
+        },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          subtle: '#F0F0ED',
+          border: '#E5E4DF',
+          muted: '#686B73',
         }
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
       }
     },
   },

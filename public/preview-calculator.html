@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MileUp Cabs - Route & Fare Estimator Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-8">
+
+  <div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Top Badge / Header -->
+    <div class="text-center space-y-2 mb-8">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold tracking-wider uppercase">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        Transparent Route &amp; Booking Engine
+      </div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+        Route &amp; Fare Estimator
+      </h1>
+      <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+        Verified highway distances on popular routes, and custom door-to-door route planning. Contact our desk for the lowest guaranteed rates.
+      </p>
+    </div>
+
+    <!-- Main Calculator Card -->
+    <div class="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 sm:p-8 shadow-2xl backdrop-blur-sm space-y-6">
+
+      <!-- Trip Mode Selector: Presets vs Custom & One-Way vs Round Trip -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-700/80 pb-5">
+        <div class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-700/60 w-full sm:w-auto">
+          <button id="btn-mode-preset" onclick="setMode('preset')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm">
+            Popular Verified Routes
+          </button>
+          <button id="btn-mode-custom" onclick="setMode('custom')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">
+            Custom Route Planner (Any Pickup / Drop)
+          </button>
+        </div>
+
+        <!-- Trip Type: One-Way vs Round Trip -->
+        <div class="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-700/60 w-full sm:w-auto">
+          <button id="btn-trip-oneway" onclick="setTripType('oneway')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">
+            One-Way Drop
+          </button>
+          <button id="btn-trip-round" onclick="setTripType('round')" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-slate-700 text-white">
+            Round-Trip (Return)
+          </button>
+        </div>
+      </div>
+
+      <!-- Preset Route Selection Grid -->
+      <div id="section-preset" class="space-y-3">
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+          Select Frequent Travel Circuit:
+        </label>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5" id="presets-container">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Custom Route Selection: Open Free-Form Inputs for ANY Location -->
+      <div id="section-custom" class="hidden space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              Pickup Location (Any Address / City / Airport)
+            </label>
+            <div class="relative">
+              <input
+                type="text"
+                id="custom-origin"
+                placeholder="Enter pickup address, sector, or city (e.g. Gurugram Cyber City, Delhi T3)..."
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-500"
+                oninput="updateCustomDisplay()"
+                list="popular-origins"
+              />
+              <datalist id="popular-origins">
+                <option value="Gurugram (Gurgaon)"></option>
+                <option value="Delhi IGI Airport (T1/T2/T3)"></option>
+                <option value="New Delhi / Delhi NCR"></option>
+                <option value="Noida / Greater Noida"></option>
+                <option value="Kashipur (Uttarakhand)"></option>
+                <option value="Moradabad"></option>
+                <option value="Haridwar / Rishikesh"></option>
+                <option value="Dehradun"></option>
+                <option value="Ramnagar (Jim Corbett)"></option>
+              </datalist>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              Drop Destination (Any Address / City)
+            </label>
+            <div class="relative">
+              <input
+                type="text"
+                id="custom-dest"
+                placeholder="Enter drop destination (e.g. Delhi Airport, Nainital, Kashipur)..."
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-blue-500 placeholder:text-slate-500"
+                oninput="updateCustomDisplay()"
+                list="popular-destinations"
+              />
+              <datalist id="popular-destinations">
+                <option value="Delhi IGI Airport (T1/T2/T3)"></option>
+                <option value="Kashipur (Uttarakhand)"></option>
+                <option value="Jim Corbett (Ramnagar)"></option>
+                <option value="Nainital Lake / Bhimtal"></option>
+                <option value="Haridwar / Rishikesh"></option>
+                <option value="Dehradun / Mussoorie"></option>
+                <option value="Pantnagar Airport (PGH)"></option>
+                <option value="Banbasa (Nepal Border)"></option>
+              </datalist>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Route Distance Bar -->
+      <div class="bg-slate-900/70 border border-slate-700/60 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Route</span>
+              <span id="badge-verified" class="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Google Maps Verified</span>
+            </div>
+            <div id="disp-route-name" class="text-sm sm:text-base font-bold text-white mt-0.5">Delhi IGI Airport (DEL) to Kashipur / Ramnagar</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+          <div>
+            <div id="disp-distance-label" class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Distance</div>
+            <div id="disp-distance" class="text-sm sm:text-base font-extrabold text-blue-400">240 km</div>
+          </div>
+          <div class="border-l border-slate-700 pl-6">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Driving Time</div>
+            <div id="disp-time" class="text-sm sm:text-base font-extrabold text-slate-200">4.5 - 5.0 Hours</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Notice Banner -->
+      <div id="banner-pricing-info" class="p-4 rounded-xl border flex items-start gap-3 bg-blue-950/40 border-blue-500/30 text-blue-200">
+        <svg class="w-5 h-5 text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="text-xs space-y-1">
+          <div id="banner-title" class="font-bold text-white text-sm">Round-Trip Pricing</div>
+          <p id="banner-desc" class="text-slate-300 leading-relaxed">
+            One-way drop rates are finalized on call based on exact pickup point. For round-trip journeys, fares are calculated on distance with zero hidden fees. Contact our 24x7 desk for the lowest guaranteed quotation.
+          </p>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Fleet Vehicle Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+
+        <!-- Card 1: Executive Sedan -->
+        <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border-2 border-blue-500/40 rounded-2xl p-6 relative flex flex-col justify-between hover:border-blue-400 transition shadow-lg">
+          <div class="absolute -top-3 right-6 bg-blue-600 text-white text-[11px] font-extrabold uppercase px-3 py-0.5 rounded-full tracking-wider shadow-sm">
+            Top Recommendation
+          </div>
+
+          <div>
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Category 01</span>
+                <h3 class="text-xl font-black text-white mt-0.5">Executive Sedan</h3>
+                <p class="text-xs text-slate-400 mt-1">Maruti Suzuki Swift Dzire or equivalent</p>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4z"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 11l2-5h12l3 5v4H3v-4z"/></svg>
+              </div>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="grid grid-cols-2 gap-2 my-4 py-3 border-y border-slate-800 text-xs text-slate-300">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>4 Passengers + Chauffeur</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>100% Dedicated Boot Space</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>Air-Conditioned Comfort</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>Doorstep Pickup Anywhere</span>
+              </div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="space-y-1">
+              <div id="label-sedan" class="text-[11px] text-slate-400 font-semibold">Estimated Fare</div>
+              <div class="flex items-baseline gap-2">
+                <span id="price-sedan" class="text-2xl sm:text-4xl font-black text-white">Decided on Call</span>
+                <span id="tag-sedan" class="text-xs text-slate-400 font-medium">best price</span>
+              </div>
+              <div id="subtext-sedan" class="text-[11px] text-emerald-400 font-medium pt-1">
+                Contact desk for live calculated rate with zero hidden charges
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-6 pt-4 border-t border-slate-800 space-y-2">
+            <button onclick="dispatchBooking('Executive Sedan', 'Dzire')" class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-md">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              <span id="btn-text-sedan-wa">Inquire on WhatsApp</span>
+            </button>
+            <a href="tel:9837084883" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition border border-slate-700">
+              <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+              <span>Call Desk: +91 9837084883</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Card 2: Family MPV (6+1) -->
+        <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-700/80 rounded-2xl p-6 relative flex flex-col justify-between hover:border-slate-500 transition shadow-lg">
+          <div>
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Category 02</span>
+                <h3 class="text-xl font-black text-white mt-0.5">Family MPV (6+1)</h3>
+                <p class="text-xs text-slate-400 mt-1">Maruti Suzuki Ertiga or equivalent</p>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 16l-2-6H7L5 16m14 0a2 2 0 11-4 0m4 0h-4M5 16a2 2 0 104 0m-4 0h4m-4 0H3m16 0h2"/></svg>
+              </div>
+            </div>
+
+            <!-- Specs Grid -->
+            <div class="grid grid-cols-2 gap-2 my-4 py-3 border-y border-slate-800 text-xs text-slate-300">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>6 Passengers + Chauffeur</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>High Ground Clearance</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>Dual Air-Conditioning</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span>Optional Roof Carrier</span>
+              </div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="space-y-1">
+              <div id="label-mpv" class="text-[11px] text-slate-400 font-semibold">Estimated Fare</div>
+              <div class="flex items-baseline gap-2">
+                <span id="price-mpv" class="text-2xl sm:text-4xl font-black text-white">Decided on Call</span>
+                <span id="tag-mpv" class="text-xs text-slate-400 font-medium">best price</span>
+              </div>
+              <div id="subtext-mpv" class="text-[11px] text-emerald-400 font-medium pt-1">
+                Contact desk for live calculated rate with zero hidden charges
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-6 pt-4 border-t border-slate-800 space-y-2">
+            <button onclick="dispatchBooking('Family MPV (6+1)', 'Ertiga')" class="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition border border-slate-600 shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              <span id="btn-text-mpv-wa">Inquire on WhatsApp</span>
+            </button>
+            <a href="tel:9837084883" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition border border-slate-700">
+              <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+              <span>Call Desk: +91 9837084883</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Best Price Callout Banner -->
+      <div class="bg-gradient-to-r from-blue-900/60 to-slate-900 border border-blue-500/40 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="space-y-1 text-center sm:text-left">
+          <div class="text-sm font-black text-white">Looking for the absolute best negotiated price?</div>
+          <p class="text-xs text-blue-200">
+            One-way drop and round-trip fares are calculated on call to give you the lowest point-to-point rate. Contact our dispatch desk directly for immediate discounts.
+          </p>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <a href="tel:9837084883" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            <span>Call +91 9837084883</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Trust Badges & Policies -->
+      <div class="pt-4 border-t border-slate-700/80 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <span>Fixed Highway Tolls Itemized</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Driver Allowance Transparent</span>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          <span>Zero Hidden Booking Fees</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Live WhatsApp Dispatch Preview Modal -->
+    <div id="modal-dispatch" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Outbound Dispatch Preview</span>
+            <h4 class="text-lg font-bold text-white mt-0.5">WhatsApp Booking Ticket</h4>
+          </div>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-4 font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap" id="modal-text">
+          <!-- Text preview injected here -->
+        </div>
+
+        <p class="text-[11px] text-slate-400">
+          This message is automatically formatted and delivered directly to the MileUp Cabs 24x7 desk (+91 9837084883) with zero emojis.
+        </p>
+
+        <div class="flex gap-3 pt-2">
+          <button onclick="confirmWhatsAppDispatch()" class="flex-1 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+            Proceed to WhatsApp
+          </button>
+          <button onclick="closeModal()" class="px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs transition">
+            Close Preview
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Verified Google Maps Highway Distances
+    const ROUTES_PRESET = [
+      {
+        id: "delhi-kashipur",
+        name: "Delhi IGI Airport (DEL) to Kashipur / Ramnagar",
+        short: "Delhi Airport ↔ Kashipur",
+        distanceKm: 240,
+        time: "4.5 - 5.0 Hours"
+      },
+      {
+        id: "delhi-corbett",
+        name: "Delhi NCR to Jim Corbett National Park (Ramnagar)",
+        short: "Delhi ↔ Jim Corbett",
+        distanceKm: 260,
+        time: "5.0 - 5.5 Hours"
+      },
+      {
+        id: "delhi-nainital",
+        name: "Delhi NCR to Nainital / Bhimtal Lake Circuit",
+        short: "Delhi ↔ Nainital",
+        distanceKm: 315,
+        time: "6.5 - 7.0 Hours"
+      },
+      {
+        id: "delhi-haridwar",
+        name: "Delhi NCR to Haridwar / Rishikesh Shrines",
+        short: "Delhi ↔ Haridwar / Rishikesh",
+        distanceKm: 225,
+        time: "4.5 - 5.0 Hours"
+      },
+      {
+        id: "delhi-dehradun",
+        name: "Delhi NCR to Dehradun / Mussoorie Hills",
+        short: "Delhi ↔ Dehradun / Mussoorie",
+        distanceKm: 260,
+        time: "5.5 - 6.0 Hours"
+      },
+      {
+        id: "kashipur-pantnagar",
+        name: "Kashipur / Moradabad to Pantnagar Airport (PGH)",
+        short: "Kashipur ↔ Pantnagar Airport",
+        distanceKm: 65,
+        time: "1.2 Hours"
+      },
+      {
+        id: "delhi-banbasa",
+        name: "Delhi to Banbasa (Nepal Border Clearance)",
+        short: "Delhi ↔ Nepal Border",
+        distanceKm: 340,
+        time: "7.0 - 7.5 Hours"
+      },
+      {
+        id: "chardham-package",
+        name: "Haridwar to Char Dham Yatra Complete Circuit",
+        short: "Haridwar ↔ Char Dham 9 Days",
+        distanceKm: 1600,
+        time: "9 Days Tour"
+      }
+    ];
+
+    let currentMode = "preset";
+    let currentTripType = "round";
+    let selectedPreset = ROUTES_PRESET[0];
+    let generatedWhatsAppUrl = "";
+
+    function renderPresets() {
+      const container = document.getElementById("presets-container");
+      container.innerHTML = ROUTES_PRESET.map((r, i) => `
+        <button
+          onclick="selectPreset(${i})"
+          class="p-3 rounded-xl border text-left transition ${selectedPreset.id === r.id ? 'bg-blue-600/20 border-blue-500 text-white' : 'bg-slate-900/60 border-slate-700/80 text-slate-300 hover:border-slate-500'}"
+        >
+          <div class="text-xs font-bold truncate">${r.short}</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">${r.distanceKm} km • ${r.time}</div>
+        </button>
+      `).join("");
+    }
+
+    function selectPreset(idx) {
+      selectedPreset = ROUTES_PRESET[idx];
+      renderPresets();
+      updateDisplay();
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      const btnPreset = document.getElementById("btn-mode-preset");
+      const btnCustom = document.getElementById("btn-mode-custom");
+      const secPreset = document.getElementById("section-preset");
+      const secCustom = document.getElementById("section-custom");
+
+      if (mode === "preset") {
+        btnPreset.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm";
+        btnCustom.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+        secPreset.classList.remove("hidden");
+        secCustom.classList.add("hidden");
+        document.getElementById("badge-verified").textContent = "Google Maps Verified";
+        updateDisplay();
+      } else {
+        btnCustom.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-sm";
+        btnPreset.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+        secCustom.classList.remove("hidden");
+        secPreset.classList.add("hidden");
+        document.getElementById("badge-verified").textContent = "Custom Door-to-Door Route";
+        updateCustomDisplay();
+      }
+    }
+
+    function setTripType(type) {
+      currentTripType = type;
+      const btnOne = document.getElementById("btn-trip-oneway");
+      const btnRound = document.getElementById("btn-trip-round");
+
+      if (type === "oneway") {
+        btnOne.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-slate-700 text-white";
+        btnRound.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+      } else {
+        btnRound.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-slate-700 text-white";
+        btnOne.className = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+      }
+
+      if (currentMode === "preset") {
+        updateDisplay();
+      } else {
+        updateCustomDisplay();
+      }
+    }
+
+    function updateDisplay() {
+      const oneWayKm = selectedPreset.distanceKm;
+      const isRound = currentTripType === "round";
+
+      document.getElementById("disp-route-name").textContent = selectedPreset.name;
+      document.getElementById("disp-time").textContent = selectedPreset.time;
+
+      if (isRound) {
+        const roundKm = oneWayKm * 2;
+        document.getElementById("disp-distance-label").textContent = "Total Round-Trip Distance";
+        document.getElementById("disp-distance").textContent = `${roundKm} km (${oneWayKm} km x 2)`;
+
+        document.getElementById("banner-title").textContent = "Round-Trip Travel";
+        document.getElementById("banner-desc").textContent = 
+          `Fares are calculated at competitive per-km rates with zero hidden charges. Contact our desk for the lowest guaranteed package quote.`;
+
+        document.getElementById("label-sedan").textContent = "Round-Trip Executive Sedan";
+        document.getElementById("price-sedan").textContent = "Decided on Call";
+        document.getElementById("tag-sedan").textContent = "best price";
+        document.getElementById("subtext-sedan").textContent = "Fares calculated on distance • Call desk for lowest customized flat quote";
+        document.getElementById("btn-text-sedan-wa").textContent = "Inquire Sedan Rate on WhatsApp";
+
+        document.getElementById("label-mpv").textContent = "Round-Trip Family MPV (6+1)";
+        document.getElementById("price-mpv").textContent = "Decided on Call";
+        document.getElementById("tag-mpv").textContent = "best price";
+        document.getElementById("subtext-mpv").textContent = "Fares calculated on distance • Call desk for lowest customized flat quote";
+        document.getElementById("btn-text-mpv-wa").textContent = "Inquire MPV Rate on WhatsApp";
+
+      } else {
+        document.getElementById("disp-distance-label").textContent = "One-Way Distance";
+        document.getElementById("disp-distance").textContent = `${oneWayKm} km`;
+
+        document.getElementById("banner-title").textContent = "One-Way Drop Rates (Decided on Call for Best Price)";
+        document.getElementById("banner-desc").textContent = 
+          `One-way drop fares are dynamically optimized on call based on exact terminal/drop sector, timing, and zero return toll charges. Contact our desk for the instant lowest live quote.`;
+
+        document.getElementById("label-sedan").textContent = "One-Way Point-to-Point Fare";
+        document.getElementById("price-sedan").textContent = "Decided on Call";
+        document.getElementById("tag-sedan").textContent = "best price";
+        document.getElementById("subtext-sedan").textContent = "Live route optimization • Call desk for guaranteed lowest flat quote";
+        document.getElementById("btn-text-sedan-wa").textContent = "Get One-Way Quote on WhatsApp";
+
+        document.getElementById("label-mpv").textContent = "One-Way Family MPV Fare";
+        document.getElementById("price-mpv").textContent = "Decided on Call";
+        document.getElementById("tag-mpv").textContent = "best price";
+        document.getElementById("subtext-mpv").textContent = "Live route optimization • Call desk for guaranteed lowest flat quote";
+        document.getElementById("btn-text-mpv-wa").textContent = "Get One-Way Quote on WhatsApp";
+      }
+    }
+
+    function updateCustomDisplay() {
+      const orig = document.getElementById("custom-origin").value.trim() || "Your Pickup Location";
+      const dest = document.getElementById("custom-dest").value.trim() || "Your Drop Destination";
+      const trip = currentTripType === "oneway" ? "One-Way Drop" : "Round-Trip (Return)";
+
+      document.getElementById("disp-route-name").textContent = `${orig} to ${dest}`;
+      document.getElementById("disp-distance-label").textContent = "Route Type";
+      document.getElementById("disp-distance").textContent = "Custom Door-to-Door";
+      document.getElementById("disp-time").textContent = "Direct Chauffeur Run";
+
+      document.getElementById("banner-title").textContent = "Custom Route Quotation (Decided on Call / WhatsApp)";
+      document.getElementById("banner-desc").textContent = 
+        `For custom pickup and drop locations, our 24x7 dispatch desk calculates the exact highway distance to give you the lowest transparent fare with zero hidden charges.`;
+
+      document.getElementById("label-sedan").textContent = `${trip} Executive Sedan (Dzire)`;
+      document.getElementById("price-sedan").textContent = "Decided on Call";
+      document.getElementById("tag-sedan").textContent = "best price";
+      document.getElementById("subtext-sedan").textContent = "Exact distance calculated on call • Call desk or WhatsApp for instant quote";
+      document.getElementById("btn-text-sedan-wa").textContent = "Inquire Custom Route on WhatsApp";
+
+      document.getElementById("label-mpv").textContent = `${trip} Family MPV (Ertiga)`;
+      document.getElementById("price-mpv").textContent = "Decided on Call";
+      document.getElementById("tag-mpv").textContent = "best price";
+      document.getElementById("subtext-mpv").textContent = "Exact distance calculated on call • Call desk or WhatsApp for instant quote";
+      document.getElementById("btn-text-mpv-wa").textContent = "Inquire Custom Route on WhatsApp";
+    }
+
+    function dispatchBooking(vehicleName, model) {
+      let route = "";
+      if (currentMode === "preset") {
+        route = selectedPreset.name;
+      } else {
+        const orig = document.getElementById("custom-origin").value.trim() || "Specified on call";
+        const dest = document.getElementById("custom-dest").value.trim() || "Specified on call";
+        route = `${orig} to ${dest}`;
+      }
+
+      const trip = currentTripType === "oneway" ? "One-Way Drop" : "Round-Trip (Return)";
+
+      const message = 
+`MileUp Cabs Reservation Inquiry (Booking Desk)
+
+Service: Route Fare Inquiry
+Route: ${route}
+Trip Type: ${trip}
+Selected Vehicle: ${vehicleName} (${model})
+
+Please share the lowest competitive rate quote and chauffeur availability. Thank you!`;
+
+      document.getElementById("modal-text").textContent = message;
+      generatedWhatsAppUrl = `https://wa.me/919837084883?text=${encodeURIComponent(message)}`;
+      document.getElementById("modal-dispatch").classList.remove("hidden");
+    }
+
+    function closeModal() {
+      document.getElementById("modal-dispatch").classList.add("hidden");
+    }
+
+    function confirmWhatsAppDispatch() {
+      window.open(generatedWhatsAppUrl, '_blank');
+      closeModal();
+    }
+
+    // Init on load
+    renderPresets();
+    updateDisplay();
+  </script>
+</body>
+</html>
